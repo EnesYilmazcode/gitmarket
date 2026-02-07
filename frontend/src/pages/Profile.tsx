@@ -17,12 +17,13 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useAuthContext } from '@/components/AuthProvider'
 import { useWallet } from '@/hooks/useWallet'
 import { supabase } from '@/lib/supabase'
-import type { Bounty } from '@/types'
+import type { Bounty, Submission } from '@/types'
 
 export function Profile() {
   const { user, profile, loading: authLoading } = useAuthContext()
   const { balance, transactions, loading: walletLoading } = useWallet(user?.id)
-  const [myBounties, setMyBounties] = useState<Bounty[]>([])
+  const [myBounties, setMyBounties] = useState<(Bounty & { submissions?: Submission[] })[]>([])
+  const [mySubmissions, setMySubmissions] = useState<(Submission & { bounties?: Bounty })[]>([])
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -35,10 +36,17 @@ export function Profile() {
     if (!user) return
     supabase
       .from('bounties')
-      .select('*, repos(*)')
+      .select('*, repos(*), submissions(*)')
       .eq('creator_id', user.id)
       .order('created_at', { ascending: false })
       .then(({ data }) => setMyBounties(data || []))
+
+    supabase
+      .from('submissions')
+      .select('*, bounties(*, repos(*))')
+      .eq('solver_id', user.id)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setMySubmissions(data || []))
   }, [user])
 
   if (authLoading || walletLoading) {
@@ -101,6 +109,7 @@ export function Profile() {
       <Tabs defaultValue="bounties" className="mt-8">
         <TabsList>
           <TabsTrigger value="bounties">My Bounties ({myBounties.length})</TabsTrigger>
+          <TabsTrigger value="submissions">My Submissions ({mySubmissions.length})</TabsTrigger>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
         </TabsList>
 
@@ -111,32 +120,96 @@ export function Profile() {
             </p>
           ) : (
             <div className="space-y-2">
-              {myBounties.map((b) => (
-                <Link key={b.id} to={`/bounty/${b.id}`}>
+              {myBounties.map((b) => {
+                const pendingCount = b.submissions?.filter(s => s.status === 'pending').length || 0
+                return (
+                  <Link key={b.id} to={`/bounty/${b.id}`}>
+                    <Card className="transition-colors hover:bg-muted/50">
+                      <CardContent className="flex items-center justify-between p-4">
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            {b.repos?.full_name}
+                          </p>
+                          <p className="font-medium">{b.issue_title}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {pendingCount > 0 && (
+                            <Badge
+                              variant="outline"
+                              className="text-orange-600 border-orange-300 bg-orange-50"
+                            >
+                              pending ({pendingCount})
+                            </Badge>
+                          )}
+                          <Badge
+                            variant="outline"
+                            className={
+                              b.status === 'open'
+                                ? 'text-emerald-600'
+                                : b.status === 'paid'
+                                  ? 'text-blue-600'
+                                  : ''
+                            }
+                          >
+                            {b.status}
+                          </Badge>
+                          <Badge className="bg-emerald-100 text-emerald-700">
+                            ${b.amount}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="submissions" className="mt-4">
+          {mySubmissions.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              You haven&apos;t submitted any solutions yet.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {mySubmissions.map((s) => (
+                <Link key={s.id} to={`/bounty/${s.bounty_id}`}>
                   <Card className="transition-colors hover:bg-muted/50">
                     <CardContent className="flex items-center justify-between p-4">
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <p className="text-xs text-muted-foreground">
-                          {b.repos?.full_name}
+                          {s.bounties?.repos?.full_name}
                         </p>
-                        <p className="font-medium">{b.issue_title}</p>
+                        <p className="font-medium truncate">{s.bounties?.issue_title}</p>
+                        <a
+                          href={s.pr_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-muted-foreground hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {s.pr_url}
+                        </a>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="ml-3 flex shrink-0 items-center gap-2">
                         <Badge
                           variant="outline"
                           className={
-                            b.status === 'open'
+                            s.status === 'approved'
                               ? 'text-emerald-600'
-                              : b.status === 'paid'
-                                ? 'text-blue-600'
+                              : s.status === 'rejected'
+                                ? 'text-destructive'
                                 : ''
                           }
                         >
-                          {b.status}
+                          {s.status}
                         </Badge>
-                        <Badge className="bg-emerald-100 text-emerald-700">
-                          ${b.amount}
-                        </Badge>
+                        {s.bounties && (
+                          <Badge className="bg-emerald-100 text-emerald-700">
+                            ${s.bounties.amount}
+                          </Badge>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

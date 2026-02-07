@@ -32,6 +32,29 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
       ...options.headers,
     },
   })
+
+  // If 401 and we had a token, it probably expired — refresh and retry once
+  if (res.status === 401 && _accessToken) {
+    _accessToken = null
+    const { data: { session } } = await supabase.auth.refreshSession()
+    if (session?.access_token) {
+      _accessToken = session.access_token
+      const retry = await fetch(`${API_URL}${path}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+          ...options.headers,
+        },
+      })
+      if (!retry.ok) {
+        const error = await retry.json().catch(() => ({ detail: 'Request failed' }))
+        throw new Error(error.detail || `HTTP ${retry.status}`)
+      }
+      return retry.json()
+    }
+  }
+
   if (!res.ok) {
     const error = await res.json().catch(() => ({ detail: 'Request failed' }))
     throw new Error(error.detail || `HTTP ${res.status}`)

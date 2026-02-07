@@ -136,9 +136,19 @@ export function RepoPage() {
                   <div className="ml-4 flex shrink-0 items-center gap-2">
                     {issue.bounty ? (
                       <Link to={`/bounty/${issue.bounty.id}`}>
-                        <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200">
-                          ${issue.bounty.amount} bounty
-                        </Badge>
+                        <Button
+                          size="sm"
+                          variant={issue.bounty.status === 'open' ? 'default' : 'outline'}
+                          className={
+                            issue.bounty.status === 'open'
+                              ? 'bg-emerald-600 hover:bg-emerald-700'
+                              : 'text-muted-foreground'
+                          }
+                        >
+                          {issue.bounty.status === 'open'
+                            ? `Solve · $${issue.bounty.amount}`
+                            : `$${issue.bounty.amount} · ${issue.bounty.status}`}
+                        </Button>
                       </Link>
                     ) : user ? (
                       <Button

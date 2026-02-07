@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ExternalLink, Check, X } from 'lucide-react'
+import { ExternalLink, Check, X, Github } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -20,7 +20,7 @@ interface BountyDetailData {
 
 export function BountyDetail() {
   const { id } = useParams<{ id: string }>()
-  const { user, refreshProfile } = useAuthContext()
+  const { user, refreshProfile, signInWithGitHub } = useAuthContext()
   const [data, setData] = useState<BountyDetailData | null>(null)
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -126,9 +126,18 @@ export function BountyDetail() {
       <Separator className="my-6" />
 
       {/* Actions */}
-      {bounty.status === 'open' && user && !isCreator && !hasSubmitted && (
+      {bounty.status === 'open' && (
         <div className="mb-6">
-          <Button onClick={() => setDialogOpen(true)}>Submit a Solution</Button>
+          {!user ? (
+            <Button variant="outline" onClick={signInWithGitHub} className="gap-2">
+              <Github className="h-4 w-4" />
+              Sign in to submit a solution
+            </Button>
+          ) : !isCreator && !hasSubmitted ? (
+            <Button onClick={() => setDialogOpen(true)}>Submit a Solution</Button>
+          ) : hasSubmitted ? (
+            <p className="text-sm text-muted-foreground">You&apos;ve already submitted a solution.</p>
+          ) : null}
         </div>
       )}
 

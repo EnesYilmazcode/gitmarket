@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ArrowRight } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -40,9 +41,14 @@ export function BountyCard({ bounty }: { bounty: Bounty }) {
                 <span>{timeAgo(bounty.created_at)}</span>
               </div>
             </div>
-            <Badge className="shrink-0 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
-              ${bounty.amount}
-            </Badge>
+            <div className="flex shrink-0 flex-col items-end gap-1.5">
+              <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                ${bounty.amount}
+              </Badge>
+              <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                Solve it <ArrowRight className="h-3 w-3" />
+              </span>
+            </div>
           </div>
         </CardContent>
       </Card>
