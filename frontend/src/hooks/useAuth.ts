@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import { setAccessToken } from '@/lib/api'
 import type { Profile } from '@/types'
 
 export function useAuth() {
@@ -12,6 +13,7 @@ export function useAuth() {
     async function getSession() {
       const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
+      setAccessToken(session?.access_token ?? null)
       if (session?.user) {
         await fetchProfile(session.user.id)
       }
@@ -23,6 +25,7 @@ export function useAuth() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event: string, session: Session | null) => {
         setUser(session?.user ?? null)
+        setAccessToken(session?.access_token ?? null)
         if (session?.user) {
           await fetchProfile(session.user.id)
         } else {
