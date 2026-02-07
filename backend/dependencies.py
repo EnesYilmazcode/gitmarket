@@ -25,9 +25,7 @@ async def get_current_user(
 ) -> dict:
     token = authorization.replace("Bearer ", "")
     if not token:
-        print("[AUTH] No token after stripping Bearer prefix")
         raise HTTPException(status_code=401, detail="Missing token")
-    print(f"[AUTH] Token received ({len(token)} chars)")
 
     async with httpx.AsyncClient() as client:
         resp = await client.get(
@@ -39,9 +37,7 @@ async def get_current_user(
         )
 
     if resp.status_code != 200:
-        print(f"[AUTH] Supabase rejected token: {resp.status_code} {resp.text}")
         raise HTTPException(status_code=401, detail="Invalid or expired token")
-    print("[AUTH] Token validated successfully")
 
     user = resp.json()
     return {"id": user["id"], "email": user.get("email")}

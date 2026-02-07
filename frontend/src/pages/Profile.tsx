@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Wallet, ArrowUpRight, ArrowDownLeft } from 'lucide-react'
+import { Wallet, ArrowUpRight, ArrowDownLeft, Github } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -45,25 +45,41 @@ export function Profile() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-8">
         <Skeleton className="h-32 rounded-lg" />
+        <Skeleton className="mt-6 h-40 rounded-lg" />
       </div>
     )
   }
 
-  if (!profile) return null
+  if (!user) return null
+
+  // Use profile fields with auth user_metadata as fallback
+  const meta = user.user_metadata || {}
+  const displayName = profile?.username || meta.full_name || meta.name || meta.user_name || 'User'
+  const avatarUrl = profile?.avatar_url || meta.avatar_url || ''
+  const githubUsername = profile?.github_username || meta.user_name || meta.preferred_username || ''
+  const email = user.email || meta.email || ''
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       {/* Profile Header */}
       <div className="flex items-center gap-4">
         <Avatar className="h-16 w-16">
-          <AvatarImage src={profile.avatar_url || ''} />
+          <AvatarImage src={avatarUrl} />
           <AvatarFallback className="text-lg">
-            {profile.username?.[0]?.toUpperCase()}
+            {displayName[0]?.toUpperCase()}
           </AvatarFallback>
         </Avatar>
         <div>
-          <h1 className="text-2xl font-bold">{profile.username}</h1>
-          <p className="text-sm text-muted-foreground">@{profile.github_username}</p>
+          <h1 className="text-2xl font-bold">{displayName}</h1>
+          {githubUsername && (
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Github className="h-3.5 w-3.5" />
+              <span>@{githubUsername}</span>
+            </div>
+          )}
+          {email && (
+            <p className="text-sm text-muted-foreground">{email}</p>
+          )}
         </div>
       </div>
 
@@ -84,7 +100,7 @@ export function Profile() {
       {/* Tabs */}
       <Tabs defaultValue="bounties" className="mt-8">
         <TabsList>
-          <TabsTrigger value="bounties">My Bounties</TabsTrigger>
+          <TabsTrigger value="bounties">My Bounties ({myBounties.length})</TabsTrigger>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
         </TabsList>
 

@@ -10,18 +10,9 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function getSession() {
-      const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
-      setAccessToken(session?.access_token ?? null)
-      if (session?.user) {
-        await fetchProfile(session.user.id)
-      }
-      setLoading(false)
-    }
-
-    getSession()
-
+    // Use onAuthStateChange as the single source of truth.
+    // getSession() can return null due to clock skew, but
+    // onAuthStateChange always fires with the real session.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event: string, session: Session | null) => {
         setUser(session?.user ?? null)
@@ -31,6 +22,7 @@ export function useAuth() {
         } else {
           setProfile(null)
         }
+        setLoading(false)
       }
     )
 
@@ -57,6 +49,7 @@ export function useAuth() {
 
   async function signOut() {
     await supabase.auth.signOut()
+    setAccessToken(null)
     setProfile(null)
   }
 
