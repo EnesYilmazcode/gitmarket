@@ -152,12 +152,12 @@ export function Profile() {
               No transactions yet.
             </p>
           ) : (
-            <Table>
+            <Table className="table-fixed">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Type</TableHead>
+                  <TableHead className="w-35">Type</TableHead>
                   <TableHead>Description</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="w-20 text-right">Amount</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -166,20 +166,20 @@ export function Profile() {
                     <TableCell>
                       <div className="flex items-center gap-1.5">
                         {tx.amount > 0 ? (
-                          <ArrowDownLeft className="h-3.5 w-3.5 text-emerald-600" />
+                          <ArrowDownLeft className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
                         ) : (
-                          <ArrowUpRight className="h-3.5 w-3.5 text-red-500" />
+                          <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-red-500" />
                         )}
-                        <span className="text-sm capitalize">
+                        <span className="text-sm capitalize truncate">
                           {tx.type.replace(/_/g, ' ')}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-sm text-muted-foreground truncate">
                       {tx.description}
                     </TableCell>
                     <TableCell
-                      className={`text-right font-medium ${
+                      className={`text-right font-medium whitespace-nowrap ${
                         tx.amount > 0 ? 'text-emerald-600' : 'text-red-500'
                       }`}
                     >
